@@ -1,0 +1,737 @@
+{
+  "info": {
+    "name": "Cursos Online — Auth & Usuarios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "🔑 Auth",
+      "item": [
+        {
+          "name": "01 - Login exitoso (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.exito && res.datos && res.datos.token) {",
+                  "    pm.collectionVariables.set('token', res.datos.token);",
+                  "    console.log('Token guardado:', res.datos.token);",
+                  "}",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene token', () => pm.expect(res.datos.token).to.not.be.empty);",
+                  "pm.test('exito es true', () => pm.expect(res.exito).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@colegio.edu\",\n  \"contrasena\": \"Admin$2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "02 - Login credenciales incorrectas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('exito es false', () => pm.expect(pm.response.json().exito).to.be.false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@colegio.edu\",\n  \"contrasena\": \"ClaveIncorrecta123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "03 - Login campo vacío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('exito es false', () => pm.expect(pm.response.json().exito).to.be.false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"\",\n  \"contrasena\": \"Admin$2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "04 - Login correo inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"esto-no-es-un-correo\",\n  \"contrasena\": \"Admin$2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "05 - Registrar alumno (pwd automática)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Tiene contrasenaTemporal', () => {",
+                  "    const datos = pm.response.json().datos;",
+                  "    pm.expect(datos.contrasenaTemporal).to.not.be.empty;",
+                  "    pm.collectionVariables.set('alumno_correo', datos.correo);",
+                  "    pm.collectionVariables.set('alumno_id', datos.idUsuario);",
+                  "    pm.collectionVariables.set('alumno_pwd', datos.contrasenaTemporal);",
+                  "    console.log('Alumno ID:', datos.idUsuario);",
+                  "    console.log('Contraseña temporal:', datos.contrasenaTemporal);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/registrar",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Juan\",\n  \"apellidos\": \"Pérez\",\n  \"correo\": \"juan.perez@colegio.edu\",\n  \"codRol\": \"ROL_ALUMNO\",\n  \"contrasenaTemporal\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "06 - Registrar profesor (pwd manual)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const datos = pm.response.json().datos;",
+                  "pm.collectionVariables.set('profesor_id', datos.idUsuario);",
+                  "pm.collectionVariables.set('profesor_correo', datos.correo);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/registrar",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"María\",\n  \"apellidos\": \"López\",\n  \"correo\": \"maria.lopez@colegio.edu\",\n  \"codRol\": \"ROL_PROFESOR\",\n  \"contrasenaTemporal\": \"Profesor$2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "07 - Registrar correo duplicado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('exito es false', () => pm.expect(pm.response.json().exito).to.be.false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/registrar",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Otro\",\n  \"apellidos\": \"Usuario\",\n  \"correo\": \"juan.perez@colegio.edu\",\n  \"codRol\": \"ROL_ALUMNO\",\n  \"contrasenaTemporal\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "08 - Login como alumno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.collectionVariables.set('token_alumno', res.datos.token);",
+                  "pm.test('pwdTemporal es true', () => pm.expect(res.datos.pwdTemporal).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{alumno_correo}}\",\n  \"contrasena\": \"{{alumno_pwd}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "09 - Cambiar contraseña (alumno)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('exito es true', () => pm.expect(pm.response.json().exito).to.be.true);",
+                  "pm.collectionVariables.set('alumno_pwd_nueva', 'NuevaClave$2026');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/auth/cambiar-contrasena",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_alumno}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasenaActual\": \"{{alumno_pwd}}\",\n  \"nuevaContrasena\": \"NuevaClave$2026\",\n  \"confirmarContrasena\": \"NuevaClave$2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "10 - Cambiar contraseña — no coinciden",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/auth/cambiar-contrasena",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasenaActual\": \"Admin$2026\",\n  \"nuevaContrasena\": \"NuevaClave$2026\",\n  \"confirmarContrasena\": \"OtraClave$2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "11 - Cambiar contraseña — igual a la actual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/auth/cambiar-contrasena",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasenaActual\": \"Admin$2026\",\n  \"nuevaContrasena\": \"Admin$2026\",\n  \"confirmarContrasena\": \"Admin$2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "12 - Cambiar contraseña — débil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/auth/cambiar-contrasena",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasenaActual\": \"Admin$2026\",\n  \"nuevaContrasena\": \"abc\",\n  \"confirmarContrasena\": \"abc\"\n}"
+            }
+          }
+        },
+        {
+          "name": "13 - Recuperar credenciales",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('exito es true', () => pm.expect(pm.response.json().exito).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/auth/recuperar-credenciales/{{alumno_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "14 - Recuperar credenciales — usuario no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/auth/recuperar-credenciales/99999",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "15 - Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('exito es true', () => pm.expect(pm.response.json().exito).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/logout",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_alumno}}" }
+            ]
+          }
+        },
+        {
+          "name": "16 - Usar token después del logout (debe fallar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 — token inválido tras logout', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/usuarios",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_alumno}}" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Usuarios",
+      "item": [
+        {
+          "name": "01 - Listar usuarios (página 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene content', () => {",
+                  "    const datos = pm.response.json().datos;",
+                  "    pm.expect(datos.content).to.be.an('array');",
+                  "    pm.expect(datos.totalElements).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/usuarios?page=0&size=10&sort=desApellidos",
+              "host": ["{{base_url}}"],
+              "path": ["usuarios"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "sort", "value": "desApellidos" }
+              ]
+            },
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "02 - Listar usuarios — sin token (debe fallar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/usuarios",
+            "header": []
+          }
+        },
+        {
+          "name": "03 - Listar usuarios — con token de alumno (debe fallar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/usuarios",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_alumno}}" }
+            ]
+          }
+        },
+        {
+          "name": "04 - Obtener usuario por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene idUsuario', () => {",
+                  "    pm.expect(pm.response.json().datos.idUsuario).to.not.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/usuarios/{{alumno_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "05 - Obtener usuario — no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/usuarios/99999",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "06 - Actualizar rol (alumno → profesor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Rol actualizado a ROL_PROFESOR', () => {",
+                  "    pm.expect(pm.response.json().datos.rol).to.eql('ROL_PROFESOR');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/usuarios/{{alumno_id}}/rol",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codRol\": \"ROL_PROFESOR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "07 - Actualizar rol — rol inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/usuarios/{{alumno_id}}/rol",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codRol\": \"ROL_INEXISTENTE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "08 - Suspender cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('activo es false', () => {",
+                  "    pm.expect(pm.response.json().datos.activo).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/usuarios/{{alumno_id}}/estado",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "09 - Login con cuenta suspendida (debe fallar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403 — cuenta inactiva', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{alumno_correo}}\",\n  \"contrasena\": \"NuevaClave$2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "10 - Reactivar cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('activo es true', () => {",
+                  "    pm.expect(pm.response.json().datos.activo).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/usuarios/{{alumno_id}}/estado",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "11 - Carga masiva CSV",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene reporte', () => {",
+                  "    const datos = pm.response.json().datos;",
+                  "    pm.expect(datos.totalProcesados).to.be.above(0);",
+                  "    console.log('Exitosos:', datos.exitosos);",
+                  "    console.log('Fallidos:', datos.fallidos);",
+                  "    console.log('Errores:', JSON.stringify(datos.errores));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/usuarios/carga-masiva",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": [],
+                  "description": "Selecciona el archivo alumnos.csv o alumnos.xlsx"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "12 - Carga masiva formato inválido (PDF)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/usuarios/carga-masiva",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": [],
+                  "description": "Sube cualquier archivo .pdf para probar el rechazo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

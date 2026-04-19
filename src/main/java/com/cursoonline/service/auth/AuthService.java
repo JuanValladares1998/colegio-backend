@@ -163,22 +163,25 @@ public class AuthService implements UserDetailsService {
     }
 
     @Transactional
-    public void recuperarCredenciales(Integer idUsuario, HttpServletRequest httpRequest) {
-        String     ip      = extraerIp(httpRequest);
-        SegUsuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new UsuarioNoEncontradoException(idUsuario));
+public String recuperarCredenciales(Integer idUsuario, HttpServletRequest httpRequest) {
+    String ip = extraerIp(httpRequest);
 
-        String nueva = generarContrasenaAleatoria();
-        usuario.setPwdContrasena(passwordEncoder.encode(nueva));
-        usuario.setEstPwdTemporal(true);
-        usuarioRepository.save(usuario);
+    SegUsuario usuario = usuarioRepository.findById(idUsuario)
+            .orElseThrow(() -> new UsuarioNoEncontradoException(idUsuario));
 
-        sesionRepository.cerrarSesionesPorUsuario(idUsuario, LocalDateTime.now());
-        registrarLogContrasena(usuario, ip, true, "Restablecida por administrador");
+    String nueva = generarContrasenaAleatoria();
+    usuario.setPwdContrasena(passwordEncoder.encode(nueva));
+    usuario.setEstPwdTemporal(true);
+    usuarioRepository.save(usuario);
 
-        log.info("Credenciales recuperadas → {} | actor: {}",
-                usuario.getDesCorreo(), usuarioAutenticado().getDesCorreo());
-    }
+    sesionRepository.cerrarSesionesPorUsuario(idUsuario, LocalDateTime.now());
+    registrarLogContrasena(usuario, ip, true, "Restablecida por administrador");
+
+    log.info("Credenciales recuperadas → {} | actor: {}",
+            usuario.getDesCorreo(), usuarioAutenticado().getDesCorreo());
+
+    return nueva; // ← ahora devuelve la contraseña
+}
 
     // ── Helpers privados ──────────────────────────────────────────────────────
 
@@ -211,4 +214,5 @@ public class AuthService implements UserDetailsService {
         logContrasenaRepository.save(AudLogContrasena.builder()
                 .usuario(usuario).desIp(ip).estExitoso(exitoso).desDetalle(detalle).build());
     }
+    
 }

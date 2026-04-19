@@ -2,9 +2,11 @@ package com.cursoonline.controller.auth;
 
 import com.cursoonline.dto.auth.request.*;
 import com.cursoonline.dto.auth.response.*;
+import com.cursoonline.entity.auth.SegUsuario;
+import com.cursoonline.exception.auth.UsuarioNoEncontradoException;
+import com.cursoonline.repository.auth.SegUsuarioRepository;
 import com.cursoonline.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final SegUsuarioRepository usuarioRepository;
 
     // ── CUS-01: LOGIN ─────────────────────────────────────────────────────────
 
@@ -156,15 +159,24 @@ public class AuthController {
         )
     })
     @PutMapping("/recuperar-credenciales/{id}")
-    @PreAuthorize("hasAnyAuthority('ROL_ADMIN', 'ROL_PROFESOR')")
-    public ResponseEntity<ApiResponse<Void>> recuperarCredenciales(
-            @Parameter(description = "ID del usuario a resetear", example = "5")
-            @PathVariable Integer id,
-            HttpServletRequest httpRequest) {
-        authService.recuperarCredenciales(id, httpRequest);
-        return ResponseEntity.ok(ApiResponse.ok("Credenciales restablecidas correctamente."));
-    }
+        @PreAuthorize("hasAnyAuthority('ROL_ADMIN', 'ROL_PROFESOR')")
+        public ResponseEntity<ApiResponse<RecuperarCredencialesResponse>> recuperarCredenciales(
+                @PathVariable Integer id,
+                HttpServletRequest httpRequest) {
 
+            String nuevaContrasena = authService.recuperarCredenciales(id, httpRequest);
+
+            // Obtener correo del usuario para incluirlo en el response
+            SegUsuario usuario = usuarioRepository.findById(id)
+                    .orElseThrow(() -> new UsuarioNoEncontradoException(id));
+
+            return ResponseEntity.ok(
+                ApiResponse.ok(
+                    "Credenciales restablecidas correctamente.",
+                    new RecuperarCredencialesResponse(usuario.getDesCorreo(), nuevaContrasena)
+                )
+            );
+        }
     // ── Helper ────────────────────────────────────────────────────────────────
 
     private String extraerToken(HttpServletRequest request) {
