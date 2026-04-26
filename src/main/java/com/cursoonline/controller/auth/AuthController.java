@@ -2,8 +2,9 @@ package com.cursoonline.controller.auth;
 
 import com.cursoonline.dto.auth.request.*;
 import com.cursoonline.dto.auth.response.*;
+import com.cursoonline.dto.common.ApiResponse;
 import com.cursoonline.entity.auth.SegUsuario;
-import com.cursoonline.exception.auth.UsuarioNoEncontradoException;
+import com.cursoonline.exception.usuario.UsuarioNoEncontradoException;
 import com.cursoonline.repository.auth.SegUsuarioRepository;
 import com.cursoonline.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;

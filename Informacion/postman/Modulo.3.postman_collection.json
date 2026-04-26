@@ -1,0 +1,1208 @@
+{
+  "info": {
+    "name": "Cursos Online — Módulo 3 (Contenido)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "tokenAdmin", "value": "" },
+    { "key": "tokenProfesorAsignado", "value": "" },
+    { "key": "tokenProfesorAjeno", "value": "" },
+    { "key": "tokenAlumnoInscrito", "value": "" },
+    { "key": "tokenAlumnoAjeno", "value": "" },
+    { "key": "idCurso", "value": "" },
+    { "key": "idCursoAjeno", "value": "" },
+    { "key": "idSeccion", "value": "" },
+    { "key": "idModulo", "value": "" },
+    { "key": "idLeccion", "value": "" },
+    { "key": "idRecursoEnlace", "value": "" },
+    { "key": "idRecursoArchivo", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "🎭 01 - Preparación de actores",
+      "item": [
+        {
+          "name": "01 - Login como admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.exito && res.datos && res.datos.token) {",
+                  "    pm.collectionVariables.set('tokenAdmin', res.datos.token);",
+                  "}",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene token', () => pm.expect(res.datos.token).to.not.be.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@colegio.edu\",\n  \"contrasena\": \"<tu-contraseña-admin>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "02 - Crear el curso principal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "if(res.datos && res.datos.idCurso) {",
+                  "    pm.collectionVariables.set('idCurso', res.datos.idCurso);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/cursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idNivel\": 1,\n  \"desNombre\": \"Java desde Cero\",\n  \"desDescripcion\": \"Curso introductorio al lenguaje Java.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "03 - Publicar el curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/cursos/{{idCurso}}/publicar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        },
+        {
+          "name": "04 - Crear el curso ajeno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "if(res.datos && res.datos.idCurso) {",
+                  "    pm.collectionVariables.set('idCursoAjeno', res.datos.idCurso);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/cursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idNivel\": 1,\n  \"desNombre\": \"Otro Curso\",\n  \"desDescripcion\": \"Curso al que ningún alumno de prueba está inscrito.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "05 - Crear sección del curso principal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 o 200', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "const res = pm.response.json();",
+                  "if(res.datos && res.datos.idSeccion) {",
+                  "    pm.collectionVariables.set('idSeccion', res.datos.idSeccion);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/secciones",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{idCurso}},\n  \"idAnioEscolar\": 2,\n  \"desNombre\": \"Sección A 2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "06 - Registrar al profesor asignado",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/registrar",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"María\",\n  \"apellidos\": \"García\",\n  \"correo\": \"maria.garcia@colegio.edu\",\n  \"codRol\": \"ROL_PROFESOR\",\n  \"contrasenaTemporal\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "07 - Asignar al profesor a la sección",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/secciones/{{idSeccion}}/profesor",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idUsuario\": \"<reemplazar-con-id-profesor>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "08 - Registrar al profesor ajeno",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/registrar",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Carlos\",\n  \"apellidos\": \"Mendez\",\n  \"correo\": \"carlos.mendez@colegio.edu\",\n  \"codRol\": \"ROL_PROFESOR\",\n  \"contrasenaTemporal\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "09 - Registrar al alumno inscrito",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/registrar",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Juan\",\n  \"apellidos\": \"Pérez\",\n  \"correo\": \"juan.perez@colegio.edu\",\n  \"codRol\": \"ROL_ALUMNO\",\n  \"contrasenaTemporal\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "10 - Registrar al alumno ajeno",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/registrar",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Torres\",\n  \"correo\": \"ana.torres@colegio.edu\",\n  \"codRol\": \"ROL_ALUMNO\",\n  \"contrasenaTemporal\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "11 - Login Profesor Asignado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.exito && res.datos) pm.collectionVariables.set('tokenProfesorAsignado', res.datos.token);",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"maria.garcia@colegio.edu\",\n  \"contrasena\": \"<password-temporal>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "12 - Login Profesor Ajeno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.exito && res.datos) pm.collectionVariables.set('tokenProfesorAjeno', res.datos.token);",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"carlos.mendez@colegio.edu\",\n  \"contrasena\": \"<password-temporal>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "13 - Login Alumno Inscrito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.exito && res.datos) pm.collectionVariables.set('tokenAlumnoInscrito', res.datos.token);",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"juan.perez@colegio.edu\",\n  \"contrasena\": \"<password-temporal>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "14 - Login Alumno Ajeno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.exito && res.datos) pm.collectionVariables.set('tokenAlumnoAjeno', res.datos.token);",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"ana.torres@colegio.edu\",\n  \"contrasena\": \"<password-temporal>\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📚 02 - Módulos",
+      "item": [
+        {
+          "name": "01 - Listar módulos del curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/modulos/curso/{{idCurso}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        },
+        {
+          "name": "02 - Crear módulo como admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "if(res.datos && res.datos.idModulo) {",
+                  "    pm.collectionVariables.set('idModulo', res.datos.idModulo);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/modulos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{idCurso}},\n  \"desNombre\": \"Módulo 1: Introducción\",\n  \"desDescripcion\": \"Primeros pasos.\",\n  \"valOrden\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "03 - Crear módulo duplicado (Falla)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('exito es false', () => pm.expect(pm.response.json().exito).to.be.false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/modulos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{idCurso}},\n  \"desNombre\": \"Módulo 1: Introducción\",\n  \"desDescripcion\": \"Primeros pasos.\",\n  \"valOrden\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "04 - Crear módulo como prof asignado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/modulos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenProfesorAsignado}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{idCurso}},\n  \"desNombre\": \"Módulo 2: Variables\",\n  \"desDescripcion\": \"...\",\n  \"valOrden\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "05 - Crear módulo como prof ajeno (Falla)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/modulos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenProfesorAjeno}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{idCurso}},\n  \"desNombre\": \"Módulo intruso\",\n  \"valOrden\": 99\n}"
+            }
+          }
+        },
+        {
+          "name": "06 - Crear módulo como alumno (Falla)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/modulos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoInscrito}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "07 - Actualizar módulo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/modulos/{{idModulo}}",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{idCurso}},\n  \"desNombre\": \"Módulo 1: Introducción a Java\",\n  \"desDescripcion\": \"Versión actualizada.\",\n  \"valOrden\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "08 - Listar módulos (deben aparecer 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Son 2 módulos', () => pm.expect(pm.response.json().datos.length).to.eql(2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/modulos/curso/{{idCurso}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "📝 03 - Lecciones",
+      "item": [
+        {
+          "name": "01 - Crear lección como admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "if(res.datos && res.datos.idLeccion) {",
+                  "    pm.collectionVariables.set('idLeccion', res.datos.idLeccion);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/lecciones",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idModulo\": {{idModulo}},\n  \"desNombre\": \"Lección 1: Hola Mundo\",\n  \"desContenido\": \"Primer programa en Java.\",\n  \"valOrden\": 1,\n  \"estObligatoria\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "02 - Listar lecciones como admin (aparece en borrador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/lecciones/modulo/{{idModulo}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        },
+        {
+          "name": "03 - Listar lecciones como alumno inscrito (lista vacía)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Lista vacía', () => pm.expect(pm.response.json().datos.length).to.eql(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/lecciones/modulo/{{idModulo}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoInscrito}}" }
+            ]
+          }
+        },
+        {
+          "name": "04 - Alumno intenta ver ID directamente (Falla 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/lecciones/{{idLeccion}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoInscrito}}" }
+            ]
+          }
+        },
+        {
+          "name": "05 - Publicar la lección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/lecciones/{{idLeccion}}/publicar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        },
+        {
+          "name": "06 - Listar lecciones como alumno inscrito (ahora sí se ve)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Lección publicada visible', () => pm.expect(pm.response.json().datos.length).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/lecciones/modulo/{{idModulo}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoInscrito}}" }
+            ]
+          }
+        },
+        {
+          "name": "07 - Listar lecciones alumno ajeno (Falla 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/lecciones/modulo/{{idModulo}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoAjeno}}" }
+            ]
+          }
+        },
+        {
+          "name": "08 - Despublicar lección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/lecciones/{{idLeccion}}/despublicar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        },
+        {
+          "name": "09 - Re-publicar lección para continuar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/lecciones/{{idLeccion}}/publicar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔗 04 - Recursos Enlace/Video",
+      "item": [
+        {
+          "name": "01 - Listar tipos de recurso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/tipos-recurso",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        },
+        {
+          "name": "02 - Crear recurso ENLACE válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "if(res.datos && res.datos.idRecurso) {",
+                  "    pm.collectionVariables.set('idRecursoEnlace', res.datos.idRecurso);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/recursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLeccion\": {{idLeccion}},\n  \"idTipoRecurso\": 2,\n  \"desNombre\": \"Documentación oficial Java\",\n  \"urlRuta\": \"https://docs.oracle.com/en/java/\"\n}"
+            }
+          }
+        },
+        {
+          "name": "03 - Crear recurso VIDEO válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/recursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLeccion\": {{idLeccion}},\n  \"idTipoRecurso\": 3,\n  \"desNombre\": \"Tutorial intro Java\",\n  \"urlRuta\": \"https://www.youtube.com/watch?v=abc123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "04 - Crear ENLACE sin URL (Falla 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/recursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLeccion\": {{idLeccion}},\n  \"idTipoRecurso\": 2,\n  \"desNombre\": \"Sin URL\",\n  \"urlRuta\": \"\"\n}"
+            }
+          }
+        },
+        {
+          "name": "05 - Crear ENLACE con URL malformada (Falla 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/recursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLeccion\": {{idLeccion}},\n  \"idTipoRecurso\": 2,\n  \"desNombre\": \"URL mala\",\n  \"urlRuta\": \"no-es-una-url\"\n}"
+            }
+          }
+        },
+        {
+          "name": "06 - Intentar crear ARCHIVO vía JSON (Falla 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/recursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLeccion\": {{idLeccion}},\n  \"idTipoRecurso\": 1,\n  \"desNombre\": \"Archivo X\",\n  \"urlRuta\": \"...\"\n}"
+            }
+          }
+        },
+        {
+          "name": "07 - Listar recursos como alumno inscrito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/recursos/leccion/{{idLeccion}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoInscrito}}" }
+            ]
+          }
+        },
+        {
+          "name": "08 - Listar recursos alumno ajeno (Falla 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/recursos/leccion/{{idLeccion}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoAjeno}}" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "📁 05 - Recursos Archivo",
+      "item": [
+        {
+          "name": "01 - Subir un archivo PDF como admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "if(res.datos && res.datos.idRecurso) {",
+                  "    pm.collectionVariables.set('idRecursoArchivo', res.datos.idRecurso);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/recursos/archivo",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "idLeccion",
+                  "value": "{{idLeccion}}",
+                  "type": "text"
+                },
+                {
+                  "key": "desNombre",
+                  "value": "Apuntes de la clase 1",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": [],
+                  "description": "Selecciona tu archivo apuntes.pdf local"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 - Listar recursos (deben aparecer 3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('3 recursos listados', () => pm.expect(pm.response.json().datos.length).to.eql(3));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/recursos/leccion/{{idLeccion}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoInscrito}}" }
+            ]
+          }
+        },
+        {
+          "name": "03 - Descargar el archivo como alumno inscrito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/recursos/{{idRecursoArchivo}}/descargar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoInscrito}}" }
+            ]
+          }
+        },
+        {
+          "name": "04 - Intentar descargar un ENLACE (Falla 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/recursos/{{idRecursoEnlace}}/descargar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        },
+        {
+          "name": "05 - Alumno ajeno intenta descargar (Falla 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/recursos/{{idRecursoArchivo}}/descargar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAlumnoAjeno}}" }
+            ]
+          }
+        },
+        {
+          "name": "06 - Eliminar el recurso ARCHIVO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/recursos/{{idRecursoArchivo}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        },
+        {
+          "name": "07 - Intentar descargar recurso eliminado (Falla 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/recursos/{{idRecursoArchivo}}/descargar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛡️ 06 - Seguridad Cruzada",
+      "item": [
+        {
+          "name": "01 - Profesor ajeno edita módulo principal (Falla 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/modulos/{{idModulo}}",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenProfesorAjeno}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{idCurso}},\n  \"desNombre\": \"Hackeado\",\n  \"valOrden\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "02 - Profesor asignado en curso ajeno (Falla 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/modulos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenProfesorAsignado}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{idCursoAjeno}},\n  \"desNombre\": \"Intento\",\n  \"valOrden\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "03 - Sin token (Falla 401/403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 o 403', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/modulos/curso/{{idCurso}}",
+            "header": []
+          }
+        },
+        {
+          "name": "04 - Token inválido (Falla 401/403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 o 403', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/modulos/curso/{{idCurso}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer token-malo-12345" }
+            ]
+          }
+        },
+        {
+          "name": "05 - Eliminar módulo (Opcional)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/modulos/{{idModulo}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

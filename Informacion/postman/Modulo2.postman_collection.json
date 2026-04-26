@@ -1,0 +1,815 @@
+{
+  "info": {
+    "name": "Cursos Online — Módulo Académico",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "token", "value": "PEGA_AQUI_TU_TOKEN_ADMIN" },
+    { "key": "token_profesor", "value": "" },
+    { "key": "nivel_id", "value": "" },
+    { "key": "curso_id", "value": "" },
+    { "key": "seccion_id", "value": "" },
+    { "key": "profesor_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "🎓 Niveles",
+      "item": [
+        {
+          "name": "01 - Crear nivel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const datos = pm.response.json().datos;",
+                  "pm.collectionVariables.set('nivel_id', datos.idNivel);",
+                  "console.log('Nivel ID:', datos.idNivel);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/niveles",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codNivel\": \"BASICO\",\n  \"desNombre\": \"Nivel Básico\",\n  \"valOrden\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "02 - Crear segundo nivel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/niveles",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codNivel\": \"INTERMEDIO\",\n  \"desNombre\": \"Nivel Intermedio\",\n  \"valOrden\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "03 - Listar niveles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene niveles', () => {",
+                  "    const datos = pm.response.json().datos;",
+                  "    pm.expect(datos).to.be.an('array');",
+                  "    pm.expect(datos.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/niveles",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "04 - Obtener nivel por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene idNivel', () => {",
+                  "    pm.expect(pm.response.json().datos.idNivel).to.not.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/niveles/{{nivel_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "05 - Obtener nivel — no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/niveles/99999",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "06 - Actualizar nivel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Nombre actualizado', () => {",
+                  "    pm.expect(pm.response.json().datos.desNombre).to.eql('Nivel Básico Actualizado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/niveles/{{nivel_id}}",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codNivel\": \"BASICO\",\n  \"desNombre\": \"Nivel Básico Actualizado\",\n  \"valOrden\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "07 - Crear nivel — campos vacíos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/niveles",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codNivel\": \"\",\n  \"desNombre\": \"\",\n  \"valOrden\": null\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📚 Cursos",
+      "item": [
+        {
+          "name": "01 - Crear curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const datos = pm.response.json().datos;",
+                  "pm.collectionVariables.set('curso_id', datos.idCurso);",
+                  "pm.test('estPublicado es false por defecto', () => {",
+                  "    pm.expect(datos.estPublicado).to.be.false;",
+                  "});",
+                  "console.log('Curso ID:', datos.idCurso);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/cursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idNivel\": {{nivel_id}},\n  \"desNombre\": \"Introducción a la Programación\",\n  \"desDescripcion\": \"Curso de fundamentos de programación con Python\"\n}"
+            }
+          }
+        },
+        {
+          "name": "02 - Crear curso — nombre duplicado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/cursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idNivel\": {{nivel_id}},\n  \"desNombre\": \"Introducción a la Programación\",\n  \"desDescripcion\": \"Otro curso con el mismo nombre\"\n}"
+            }
+          }
+        },
+        {
+          "name": "03 - Crear curso — nivel no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/cursos",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idNivel\": 99999,\n  \"desNombre\": \"Curso con nivel inexistente\",\n  \"desDescripcion\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "04 - Listar todos los cursos (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene content', () => {",
+                  "    pm.expect(pm.response.json().datos.content).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/cursos?page=0&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["cursos"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            },
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "05 - Listar cursos publicados",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todos publicados', () => {",
+                  "    const cursos = pm.response.json().datos.content;",
+                  "    cursos.forEach(c => pm.expect(c.estPublicado).to.be.true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/cursos/publicados",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "06 - Obtener curso por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene idCurso', () => {",
+                  "    pm.expect(pm.response.json().datos.idCurso).to.not.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/cursos/{{curso_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "07 - Actualizar curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/cursos/{{curso_id}}",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idNivel\": {{nivel_id}},\n  \"desNombre\": \"Introducción a la Programación\",\n  \"desDescripcion\": \"Descripción actualizada del curso\"\n}"
+            }
+          }
+        },
+        {
+          "name": "08 - Publicar curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('estPublicado es true', () => {",
+                  "    pm.expect(pm.response.json().datos.estPublicado).to.be.true;",
+                  "});",
+                  "pm.test('Tiene fecPublicacion', () => {",
+                  "    pm.expect(pm.response.json().datos.fecPublicacion).to.not.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/cursos/{{curso_id}}/publicar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "09 - Despublicar curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('estPublicado es false', () => {",
+                  "    pm.expect(pm.response.json().datos.estPublicado).to.be.false;",
+                  "});",
+                  "pm.test('fecPublicacion es null', () => {",
+                  "    pm.expect(pm.response.json().datos.fecPublicacion).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/cursos/{{curso_id}}/despublicar",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "10 - Obtener curso — no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/cursos/99999",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏫 Secciones",
+      "item": [
+        {
+          "name": "01 - Crear sección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const datos = pm.response.json().datos;",
+                  "pm.collectionVariables.set('seccion_id', datos.idSeccion);",
+                  "pm.test('Sin profesor asignado', () => {",
+                  "    pm.expect(datos.idProfesor).to.be.null;",
+                  "    pm.expect(datos.desProfesor).to.be.null;",
+                  "});",
+                  "console.log('Sección ID:', datos.idSeccion);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/secciones",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{curso_id}},\n  \"idAnioEscolar\": 1,\n  \"desNombre\": \"Taller de Programación - A\"\n}"
+            }
+          }
+        },
+        {
+          "name": "02 - Crear sección duplicada (debe fallar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/secciones",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{curso_id}},\n  \"idAnioEscolar\": 1,\n  \"desNombre\": \"Taller de Programación - A\"\n}"
+            }
+          }
+        },
+        {
+          "name": "03 - Crear segunda sección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/secciones",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{curso_id}},\n  \"idAnioEscolar\": 1,\n  \"desNombre\": \"Taller de Programación - B\"\n}"
+            }
+          }
+        },
+        {
+          "name": "04 - Listar secciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene content', () => {",
+                  "    pm.expect(pm.response.json().datos.content).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/secciones?page=0&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["secciones"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            },
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "05 - Listar secciones por curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todas del mismo curso', () => {",
+                  "    const cursoId = parseInt(pm.collectionVariables.get('curso_id'));",
+                  "    pm.response.json().datos.content.forEach(s => {",
+                  "        pm.expect(s.idCurso).to.eql(cursoId);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/secciones/curso/{{curso_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "06 - Listar secciones por año escolar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/secciones/anio/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "07 - Obtener sección por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene idSeccion', () => {",
+                  "    pm.expect(pm.response.json().datos.idSeccion).to.not.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/secciones/{{seccion_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "08 - Actualizar sección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/secciones/{{seccion_id}}",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCurso\": {{curso_id}},\n  \"idAnioEscolar\": 1,\n  \"desNombre\": \"Taller de Programación - A (Actualizado)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "09 - Asignar profesor a sección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene profesor asignado', () => {",
+                  "    const datos = pm.response.json().datos;",
+                  "    pm.expect(datos.idProfesor).to.not.be.null;",
+                  "    pm.expect(datos.desProfesor).to.not.be.null;",
+                  "    console.log('Profesor:', datos.desProfesor);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/secciones/{{seccion_id}}/profesor",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idProfesor\": {{profesor_id}}\n}"
+            }
+          }
+        },
+        {
+          "name": "10 - Asignar profesor duplicado (debe fallar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409 — ya tiene profesor', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/secciones/{{seccion_id}}/profesor",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idProfesor\": {{profesor_id}}\n}"
+            }
+          }
+        },
+        {
+          "name": "11 - Asignar usuario que no es profesor (debe fallar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 — no es profesor', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/secciones/{{seccion_id}}/profesor",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idProfesor\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "12 - Remover profesor de sección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Sin profesor', () => {",
+                  "    const datos = pm.response.json().datos;",
+                  "    pm.expect(datos.idProfesor).to.be.null;",
+                  "    pm.expect(datos.desProfesor).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/secciones/{{seccion_id}}/profesor",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "13 - Remover profesor sin asignación (debe fallar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 — sin profesor asignado', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/secciones/{{seccion_id}}/profesor",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        },
+        {
+          "name": "14 - Obtener sección — no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/secciones/99999",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
