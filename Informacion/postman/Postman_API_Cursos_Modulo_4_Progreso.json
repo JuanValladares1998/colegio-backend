@@ -1,0 +1,113 @@
+{
+  "info": {
+    "name": "API Cursos Online - Módulo 4: Progreso",
+    "description": "Colección de pruebas para el Sub-bloque 4.1: Seguimiento de progreso del alumno.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Progreso de Lecciones",
+      "item": [
+        {
+          "name": "1. Completar Lección",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/progreso/leccion/:idLeccion/completar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "progreso",
+                "leccion",
+                ":idLeccion",
+                "completar"
+              ],
+              "variable": [
+                {
+                  "key": "idLeccion",
+                  "value": "1",
+                  "description": "ID de la lección a marcar como completada"
+                }
+              ]
+            },
+            "description": "Marca una lección como completada. Requiere ROL_ALUMNO y estar inscrito en el curso correspondiente. Es idempotente (enviar varias veces no duplica)."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Obtener Mi Progreso",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/progreso/mi-progreso",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "progreso",
+                "mi-progreso"
+              ]
+            },
+            "description": "Devuelve las estadísticas globales del alumno, agrupadas por curso y módulo."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "pega_tu_token_jwt_de_alumno_aqui",
+      "type": "string"
+    }
+  ]
+}
