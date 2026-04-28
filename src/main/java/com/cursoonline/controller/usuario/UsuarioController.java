@@ -3,7 +3,9 @@ package com.cursoonline.controller.usuario;
 import com.cursoonline.dto.common.ApiResponse;
 import com.cursoonline.dto.usuario.request.ActualizarEstadoRequest;
 import com.cursoonline.dto.usuario.request.ActualizarRolRequest;
+import com.cursoonline.dto.usuario.request.CrearUsuarioRequest;
 import com.cursoonline.dto.usuario.response.CargaMasivaResponse;
+import com.cursoonline.dto.usuario.response.CrearUsuarioResponse;
 import com.cursoonline.dto.usuario.response.UsuarioResponse;
 import com.cursoonline.service.usuario.UsuarioService;
 
@@ -133,6 +135,22 @@ public class UsuarioController {
         return ResponseEntity.ok(
                 ApiResponse.ok("Estado de cuenta actualizado correctamente.",
                         usuarioService.actualizarEstado(id, request))
+        );
+    }
+     @Operation(
+        summary     = "Crear usuario",
+        description = "Registra un nuevo usuario alumno con contraseña temporal."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Usuario creado correctamente"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Datos inválidos o correo ya registrado")
+    })
+    @PostMapping
+    public ResponseEntity<ApiResponse<CrearUsuarioResponse>> crear(
+            @Valid @RequestBody CrearUsuarioRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.ok("Usuario creado correctamente.",
+                        usuarioService.crearUsuario(request))
         );
     }
 

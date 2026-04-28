@@ -2,6 +2,7 @@ package com.cursoonline.service.usuario;
 
 import com.cursoonline.dto.usuario.request.ActualizarEstadoRequest;
 import com.cursoonline.dto.usuario.request.ActualizarRolRequest;
+import com.cursoonline.dto.usuario.request.CrearUsuarioRequest;
 import com.cursoonline.dto.usuario.response.CargaMasivaResponse;
 import com.cursoonline.dto.usuario.response.UsuarioResponse;
 import com.cursoonline.dto.usuario.response.CargaMasivaResponse.CredencialAlumno;
@@ -11,6 +12,7 @@ import com.cursoonline.entity.auth.SegUsuario;
 import com.cursoonline.entity.usuario.AudLogAdmin;
 import com.cursoonline.exception.usuario.RolNoEncontradoException;
 import com.cursoonline.exception.usuario.UsuarioNoEncontradoException;
+import com.cursoonline.dto.usuario.response.CrearUsuarioResponse;
 import com.cursoonline.repository.auth.CatRolRepository;
 import com.cursoonline.repository.auth.SegSesionRepository;
 import com.cursoonline.repository.auth.SegUsuarioRepository;
@@ -131,6 +133,36 @@ public class UsuarioService {
                 usuario.getDesCorreo(), request.activo(), admin.getDesCorreo());
 
         return toResponse(usuario);
+    }
+    @Transactional
+    public CrearUsuarioResponse crearUsuario(CrearUsuarioRequest request) {
+
+        if (usuarioRepository.existsByDesCorreo(request.correo())) {
+            throw new IllegalArgumentException("El correo ya está registrado.");
+        }
+
+        CatRol rolAlumno = rolRepository.findByCodRol("ROL_ALUMNO")
+                .orElseThrow(() -> new RolNoEncontradoException("ROL_ALUMNO"));
+
+        String contrasenaTemp = guardarAlumno(
+                request.nombres(),
+                request.apellidos(),
+                request.correo(),
+                rolAlumno
+        );
+
+        SegUsuario usuario = usuarioRepository.findByDesCorreo(request.correo())
+                .orElseThrow();
+
+        SegUsuario admin = adminAutenticado();
+        registrarLogAdmin(admin, usuario,
+                "CREAR_USUARIO",
+                "Usuario creado con contraseña temporal");
+
+        return new CrearUsuarioResponse(
+                toResponse(usuario),
+                contrasenaTemp
+        );
     }
 
     // ── CUS-07: CARGA MASIVA ──────────────────────────────────────────────────
