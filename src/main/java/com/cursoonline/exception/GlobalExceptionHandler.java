@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import com.cursoonline.dto.common.ApiResponse;
 import com.cursoonline.exception.academico.*;
 import com.cursoonline.exception.auth.*;
+import com.cursoonline.exception.evaluacion.*;
 import com.cursoonline.exception.usuario.CorreoDuplicadoException;
 import com.cursoonline.exception.usuario.RolNoEncontradoException;
 import com.cursoonline.exception.usuario.UsuarioNoEncontradoException;
@@ -188,6 +189,60 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UsuarioNoEsAlumnoException.class)
     public ResponseEntity<ApiResponse<Void>> handleUsuarioNoEsAlumno(UsuarioNoEsAlumnoException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
+    @ExceptionHandler(EvaluacionNoEncontradaException.class)
+
+    public ResponseEntity<ApiResponse<Void>> handleEvalNotFound(EvaluacionNoEncontradaException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(EvaluacionYaExisteException.class)
+    public ResponseEntity<ApiResponse<Void>> handleEvalExiste(EvaluacionYaExisteException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(EvaluacionActivaException.class)
+    public ResponseEntity<ApiResponse<Void>> handleEvalActiva(EvaluacionActivaException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(PreguntaNoEncontradaException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePreguntaNotFound(PreguntaNoEncontradaException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(TipoPreguntaNoEncontradoException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTipoNotFound(TipoPreguntaNoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(PreguntaInvalidaException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePreguntaInvalida(PreguntaInvalidaException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
+    @ExceptionHandler(IntentoNoEncontradoException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIntentoNotFound(IntentoNoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(IntentoCompletadoException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIntentoCompletado(IntentoCompletadoException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler({EvaluacionNoActivaException.class, LeccionesPendientesException.class})
+    public ResponseEntity<ApiResponse<Void>> handlePrecondicion(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(MaxIntentosAlcanzadosException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxIntentos(MaxIntentosAlcanzadosException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(RespuestaInvalidaException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRespuestaInvalida(RespuestaInvalidaException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
     }
 

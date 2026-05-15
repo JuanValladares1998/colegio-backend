@@ -1,0 +1,183 @@
+{
+	"info": {
+		"name": "Curso Online - Módulo 5 (Evaluaciones y Preguntas)",
+		"description": "Colección completa para el Módulo 5, que incluye la gestión de Evaluaciones (CUS-13) y su banco de Preguntas con opciones.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "PEGA_TU_TOKEN_AQUI",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "1. Evaluaciones",
+			"item": [
+				{
+					"name": "1. Crear Evaluación",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idModulo\": 5,\n  \"desTitulo\": \"Examen final del módulo\",\n  \"desInstrucciones\": \"Tienes 30 minutos. Lee bien antes de responder.\",\n  \"valPuntajeMinimo\": 60.00,\n  \"valTiempoLimite\": 30,\n  \"valMaxIntentos\": 3\n}",
+							"options": {"raw": {"language": "json"}}
+						},
+						"url": {"raw": "{{baseUrl}}/evaluaciones", "host": ["{{baseUrl}}"], "path": ["evaluaciones"]}
+					}
+				},
+				{
+					"name": "2. Listar por Módulo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/evaluaciones/modulo/5", "host": ["{{baseUrl}}"], "path": ["evaluaciones", "modulo", "5"]}
+					}
+				},
+				{
+					"name": "3. Obtener Evaluación por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/evaluaciones/1", "host": ["{{baseUrl}}"], "path": ["evaluaciones", "1"]}
+					}
+				},
+				{
+					"name": "4. Actualizar Evaluación",
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idModulo\": 5,\n  \"desTitulo\": \"Examen final del módulo (Actualizado)\",\n  \"desInstrucciones\": \"Nuevas instrucciones.\",\n  \"valPuntajeMinimo\": 70.00,\n  \"valTiempoLimite\": 45,\n  \"valMaxIntentos\": 2\n}",
+							"options": {"raw": {"language": "json"}}
+						},
+						"url": {"raw": "{{baseUrl}}/evaluaciones/1", "host": ["{{baseUrl}}"], "path": ["evaluaciones", "1"]}
+					}
+				},
+				{
+					"name": "5. Activar Evaluación",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/evaluaciones/1/activar", "host": ["{{baseUrl}}"], "path": ["evaluaciones", "1", "activar"]}
+					}
+				},
+				{
+					"name": "6. Desactivar Evaluación",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/evaluaciones/1/desactivar", "host": ["{{baseUrl}}"], "path": ["evaluaciones", "1", "desactivar"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Preguntas",
+			"item": [
+				{
+					"name": "1. Listar Tipos de Pregunta",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/tipos-pregunta", "host": ["{{baseUrl}}"], "path": ["tipos-pregunta"]}
+					}
+				},
+				{
+					"name": "2. Crear Pregunta (Opción Múltiple - Éxito)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idEvaluacion\": 1,\n  \"idTipoPregunta\": 1,\n  \"desEnunciado\": \"¿Cuál es la sintaxis correcta para declarar un entero en Java?\",\n  \"valOrden\": 1,\n  \"valPuntaje\": 1.00,\n  \"opciones\": [\n    { \"desOpcion\": \"int x = 5;\", \"estCorrecta\": true,  \"valOrden\": 1 },\n    { \"desOpcion\": \"integer x = 5;\", \"estCorrecta\": false, \"valOrden\": 2 },\n    { \"desOpcion\": \"int x := 5;\", \"estCorrecta\": false, \"valOrden\": 3 }\n  ]\n}",
+							"options": {"raw": {"language": "json"}}
+						},
+						"url": {"raw": "{{baseUrl}}/preguntas", "host": ["{{baseUrl}}"], "path": ["preguntas"]}
+					}
+				},
+				{
+					"name": "3. Crear Pregunta (V/F - Error 2 Correctas)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idEvaluacion\": 1,\n  \"idTipoPregunta\": 2,\n  \"desEnunciado\": \"Java es un lenguaje interpretado.\",\n  \"valOrden\": 2,\n  \"valPuntaje\": 2.00,\n  \"opciones\": [\n    { \"desOpcion\": \"Verdadero\", \"estCorrecta\": true,  \"valOrden\": 1 },\n    { \"desOpcion\": \"Falso\", \"estCorrecta\": true, \"valOrden\": 2 }\n  ]\n}",
+							"options": {"raw": {"language": "json"}}
+						},
+						"url": {"raw": "{{baseUrl}}/preguntas", "host": ["{{baseUrl}}"], "path": ["preguntas"]}
+					}
+				},
+				{
+					"name": "4. Crear Pregunta (Completar Código - Éxito)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idEvaluacion\": 1,\n  \"idTipoPregunta\": 3,\n  \"desEnunciado\": \"Completa el código: System.out.____(\\\"Hola\\\");\",\n  \"valOrden\": 3,\n  \"valPuntaje\": 3.00,\n  \"opciones\": [\n    { \"desOpcion\": \"println\", \"estCorrecta\": true,  \"valOrden\": 1 }\n  ]\n}",
+							"options": {"raw": {"language": "json"}}
+						},
+						"url": {"raw": "{{baseUrl}}/preguntas", "host": ["{{baseUrl}}"], "path": ["preguntas"]}
+					}
+				},
+				{
+					"name": "5. Listar Preguntas por Evaluación",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/preguntas/evaluacion/1", "host": ["{{baseUrl}}"], "path": ["preguntas", "evaluacion", "1"]}
+					}
+				},
+				{
+					"name": "6. Obtener Pregunta por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/preguntas/1", "host": ["{{baseUrl}}"], "path": ["preguntas", "1"]}
+					}
+				},
+				{
+					"name": "7. Actualizar Pregunta",
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idEvaluacion\": 1,\n  \"idTipoPregunta\": 1,\n  \"desEnunciado\": \"¿Cuál es la sintaxis correcta para declarar un entero en Java? (Actualizado)\",\n  \"valOrden\": 1,\n  \"valPuntaje\": 2.00,\n  \"opciones\": [\n    { \"desOpcion\": \"int x = 5;\", \"estCorrecta\": true,  \"valOrden\": 1 },\n    { \"desOpcion\": \"var x = 5;\", \"estCorrecta\": false, \"valOrden\": 2 }\n  ]\n}",
+							"options": {"raw": {"language": "json"}}
+						},
+						"url": {"raw": "{{baseUrl}}/preguntas/1", "host": ["{{baseUrl}}"], "path": ["preguntas", "1"]}
+					}
+				},
+				{
+					"name": "8. Eliminar Pregunta",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/preguntas/1", "host": ["{{baseUrl}}"], "path": ["preguntas", "1"]}
+					}
+				}
+			]
+		}
+	]
+}

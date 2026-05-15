@@ -4,7 +4,8 @@ import com.cursoonline.entity.progreso.TraProgresoLeccion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -71,4 +72,100 @@ public interface TraProgresoLeccionRepository extends JpaRepository<TraProgresoL
         Long    getTotal();
         Long    getCompletadas();
     }
+    @Query("""
+    SELECT u.idUsuario                                           AS idAlumno,
+           u.desNombres                                          AS nombres,
+           u.desApellidos                                        AS apellidos,
+           (SELECT COUNT(l)
+              FROM TraLeccion l
+             WHERE l.modulo.curso = s.curso
+               AND l.estObligatoria = true
+               AND l.estPublicada   = true
+               AND l.estActiva      = true)                      AS totalObligatorias,
+           (SELECT COUNT(pl)
+              FROM TraProgresoLeccion pl
+             WHERE pl.usuario = u
+               AND pl.estCompletada = true
+               AND pl.leccion.modulo.curso = s.curso
+               AND pl.leccion.estObligatoria = true
+               AND pl.leccion.estPublicada   = true
+               AND pl.leccion.estActiva      = true)             AS completadas,
+           (SELECT MAX(pl.fecCompletado)
+              FROM TraProgresoLeccion pl
+             WHERE pl.usuario = u
+               AND pl.estCompletada = true
+               AND pl.leccion.modulo.curso = s.curso)            AS ultimaActividad
+    FROM   RelAlumnoSeccion ras
+    JOIN   ras.alumno u
+    JOIN   ras.seccion s
+    WHERE  s.idSeccion = :idSeccion
+      AND  ras.estActivo = true
+      AND  u.estActivo   = true
+      AND  u.rol.codRol  = 'ROL_ALUMNO'
+""")
+Page<FilaTableroView> findTableroPorSeccion(
+        @Param("idSeccion") Integer idSeccion,
+        Pageable pageable);
+
+interface FilaTableroView {
+    Integer       getIdAlumno();
+    String        getNombres();
+    String        getApellidos();
+    Long          getTotalObligatorias();
+    Long          getCompletadas();
+    LocalDateTime getUltimaActividad();
+    
+}
+@Query("""
+    SELECT m.idModulo                          AS idModulo,
+           m.desNombre                         AS nombreModulo,
+           m.valOrden                          AS ordenModulo,
+           l.idLeccion                         AS idLeccion,
+           l.desNombre                         AS nombreLeccion,
+           l.valOrden                          AS ordenLeccion,
+           l.estObligatoria                    AS obligatoria,
+           COALESCE(pl.estCompletada, false)   AS completada,
+           pl.fecCompletado                    AS fecCompletado
+    FROM   TraModulo m
+    JOIN   TraLeccion l                  ON l.modulo = m
+                                        AND l.estPublicada = true
+                                        AND l.estActiva    = true
+    LEFT JOIN TraProgresoLeccion pl      ON pl.leccion = l
+                                        AND pl.usuario.idUsuario = :idAlumno
+    WHERE  m.curso.idCurso = :idCurso
+      AND  m.estActivo = true
+    ORDER BY m.valOrden, l.valOrden
+""")
+List<HistorialLeccionView> findHistorialPorAlumnoYCurso(
+        @Param("idAlumno") Integer idAlumno,
+        @Param("idCurso") Integer idCurso);
+
+interface HistorialLeccionView {
+    Integer       getIdModulo();
+    String        getNombreModulo();
+    Short         getOrdenModulo();
+    Integer       getIdLeccion();
+    String        getNombreLeccion();
+    Short         getOrdenLeccion();
+    Boolean       getObligatoria();
+    Boolean       getCompletada();
+    LocalDateTime getFecCompletado();
+}
+@Query("""
+    SELECT COUNT(l)
+    FROM   TraLeccion l
+    WHERE  l.modulo.idModulo = :idModulo
+      AND  l.estObligatoria = true
+      AND  l.estPublicada   = true
+      AND  l.estActiva      = true
+      AND  NOT EXISTS (
+            SELECT 1 FROM TraProgresoLeccion pl
+            WHERE pl.leccion = l
+              AND pl.usuario.idUsuario = :idUsuario
+              AND pl.estCompletada = true
+      )
+""")
+long countLeccionesObligatoriasPendientes(
+        @Param("idUsuario") Integer idUsuario,
+        @Param("idModulo") Integer idModulo);
 }   
