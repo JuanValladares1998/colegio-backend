@@ -40,28 +40,34 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    // ── CUS-05: LISTAR USUARIOS ───────────────────────────────────────────────
+    // ── CUS-05: LISTAR USUARIOS (CON FILTROS UNIFICADO) ───────────────────────
 
+    @GetMapping
+    @PreAuthorize("hasAuthority('ROL_ADMIN')")
     @Operation(
-        summary     = "CUS-05 · Listar usuarios",
-        description = "Devuelve todos los usuarios registrados con paginación. " +
-                      "Parámetros: page (0-based), size, sort."
+        summary     = "CUS-05 · Listar usuarios con filtros",
+        description = "Devuelve todos los usuarios registrados con paginación y filtros opcionales. " +
+                      "Requiere ROL_ADMIN."
     )
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200", description = "Lista de usuarios obtenida"
+            responseCode = "200", description = "Lista de usuarios obtenida correctamente"
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "403", description = "Acceso denegado — requiere ROL_ADMIN"
         )
     })
-    @GetMapping
     public ResponseEntity<ApiResponse<Page<UsuarioResponse>>> listar(
-            @PageableDefault(size = 10, sort = "desApellidos")
-            Pageable pageable) {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Usuarios obtenidos correctamente.",
-                        usuarioService.listarUsuarios(pageable))
+            @RequestParam(required = false) String rol,
+            @RequestParam(required = false) String busqueda,
+            @RequestParam(required = false) Boolean estActivo,
+            @RequestParam(defaultValue = "false") boolean sinSeccion,
+            @PageableDefault(size = 10, sort = "desApellidos") @ParameterObject Pageable pageable,
+            @AuthenticationPrincipal SegUsuario admin) {
+        
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Usuarios obtenidos correctamente.",
+                usuarioService.listarConFiltros(rol, busqueda, estActivo, sinSeccion, pageable))
         );
     }
 
@@ -143,7 +149,8 @@ public class UsuarioController {
                         usuarioService.actualizarEstado(id, request))
         );
     }
-     @Operation(
+
+    @Operation(
         summary     = "Crear usuario",
         description = "Registra un nuevo usuario alumno con contraseña temporal."
     )
@@ -186,22 +193,8 @@ public class UsuarioController {
                 reporte.exitosos(), reporte.fallidos());
         return ResponseEntity.ok(ApiResponse.ok(mensaje, reporte));
     }
-    @GetMapping
-@PreAuthorize("hasAuthority('ROL_ADMIN')")
-@Operation(summary = "Listado de usuarios con filtros")
-public ResponseEntity<ApiResponse<Page<UsuarioResponse>>> listar(
-        @RequestParam(required = false) String rol,
-        @RequestParam(required = false) String busqueda,
-        @RequestParam(required = false) Boolean estActivo,
-        @RequestParam(defaultValue = "false") boolean sinSeccion,
-        @ParameterObject Pageable pageable,
-        @AuthenticationPrincipal SegUsuario admin) {
-    return ResponseEntity.ok(ApiResponse.ok(
-            "Usuarios obtenidos.",
-            usuarioService.listarConFiltros(rol, busqueda, estActivo, sinSeccion, pageable)));
-}
 
-// #2 — actualizar nombre/correo
+    // #2 — actualizar nombre/correo
     @PutMapping("/{id}/datos")
     @PreAuthorize("hasAuthority('ROL_ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioResponse>> actualizarDatos(
@@ -226,7 +219,6 @@ public ResponseEntity<ApiResponse<Page<UsuarioResponse>>> listar(
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<UsuarioResponse>> miInfo(
             @AuthenticationPrincipal SegUsuario usuario) {
-        // SegUsuario YA viene cargado por el filtro JWT — no hace falta consultar la BD.
         return ResponseEntity.ok(ApiResponse.ok("Mi información.", usuarioService.obtenerUsuario(usuario.getIdUsuario())));
     }
 }

@@ -35,7 +35,7 @@ public interface SegUsuarioRepository extends JpaRepository<SegUsuario, Integer>
           OR (u.rol.codRol = 'ROL_ALUMNO'
               AND NOT EXISTS (
                   SELECT 1 FROM RelAlumnoSeccion ras
-                  WHERE ras.usuario = u AND ras.estActivo = true
+                  WHERE ras.alumno = u AND ras.estActivo = true
               ))
       )
     """)
