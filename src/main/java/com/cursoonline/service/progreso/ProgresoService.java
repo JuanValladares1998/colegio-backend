@@ -34,14 +34,16 @@ import com.cursoonline.repository.progreso.TraProgresoLeccionRepository.Historia
 import com.cursoonline.repository.progreso.TraProgresoLeccionRepository.ModuloStatsView;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 
@@ -129,8 +131,9 @@ private final CatCursoRepository    cursoRepository;
     Integer idCurso = seccion.getCurso().getIdCurso();
     validarAccesoProfesorACurso(profesor, idCurso);
 
+    Pageable pageableCorregido = corregirPageableParaTablero(pageable);
     Page<FilaTableroView> filas = progresoRepository
-            .findTableroPorSeccion(idSeccion, pageable);
+            .findTableroPorSeccion(idSeccion, pageableCorregido);
 
     Page<FilaTableroResponse> alumnos = filas.map(this::toFilaResponse);
 
@@ -163,6 +166,27 @@ private void validarAccesoProfesorACurso(SegUsuario usuario, Integer idCurso) {
         throw new AccesoCursoDenegadoException();
     }
 }
+
+    private Pageable corregirPageableParaTablero(Pageable pageable) {
+        Sort sortCorregido = Sort.by(
+            pageable.getSort().stream()
+                .map(order -> {
+                    return switch (order.getProperty()) {
+                        case "nombres" -> new Sort.Order(order.getDirection(), "alumno.desNombres");
+                        case "apellidos" -> new Sort.Order(order.getDirection(), "alumno.desApellidos");
+                        default -> null;
+                    };
+                })
+                .filter(Objects::nonNull)
+                .toList()
+        );
+
+        if (sortCorregido.isEmpty()) {
+            sortCorregido = Sort.by("alumno.desApellidos").ascending();
+        }
+
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sortCorregido);
+    }
 
         private FilaTableroResponse toFilaResponse(FilaTableroView v) {
         long total = safeLong(v.getTotalObligatorias());

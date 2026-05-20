@@ -102,6 +102,7 @@ public interface TraProgresoLeccionRepository extends JpaRepository<TraProgresoL
       AND  ras.estActivo = true
       AND  u.estActivo   = true
       AND  u.rol.codRol  = 'ROL_ALUMNO'
+    ORDER BY u.desApellidos, u.desNombres
 """)
 Page<FilaTableroView> findTableroPorSeccion(
         @Param("idSeccion") Integer idSeccion,

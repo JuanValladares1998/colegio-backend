@@ -400,8 +400,9 @@ public class UsuarioService {
     public Page<UsuarioResponse> listarConFiltros(
             String codRol, String busqueda, Boolean estActivo,
             boolean sinSeccion, Pageable pageable) {
+        String busquedaTerm = busqueda == null ? null : "%" + busqueda + "%";
         return usuarioRepository
-                .buscarConFiltros(codRol, busqueda, estActivo, sinSeccion, pageable)
+                .buscarConFiltros(codRol, busquedaTerm, estActivo, sinSeccion, pageable)
                 .map(this::toResponse);
     }
 
