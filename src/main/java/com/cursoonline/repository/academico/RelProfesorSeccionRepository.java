@@ -29,4 +29,23 @@ public interface RelProfesorSeccionRepository extends JpaRepository<RelProfesorS
 boolean profesorTieneAccesoACurso(
         @Param("idUsuario") Integer idUsuario,
         @Param("idCurso") Integer idCurso);
+
+    @Query("""
+    SELECT rps FROM RelProfesorSeccion rps
+    JOIN FETCH rps.profesor u
+    JOIN FETCH rps.seccion s
+    JOIN FETCH s.curso
+    JOIN FETCH s.anioEscolar
+    WHERE rps.estActivo = true
+      AND (:idProfesor IS NULL OR u.idUsuario = :idProfesor)
+      AND (:idSeccion  IS NULL OR s.idSeccion = :idSeccion)
+      AND (:idCurso    IS NULL OR s.curso.idCurso = :idCurso)
+      AND (:idAnio     IS NULL OR s.anioEscolar.idAnioEscolar = :idAnio)
+    ORDER BY u.desApellidos, s.desNombre
+""")
+List<RelProfesorSeccion> findAsignacionesConFiltros(
+        @Param("idProfesor") Integer idProfesor,
+        @Param("idSeccion") Integer idSeccion,
+        @Param("idCurso") Integer idCurso,
+        @Param("idAnio") Integer idAnio);
 }

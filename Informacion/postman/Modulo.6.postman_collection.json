@@ -1,0 +1,97 @@
+{
+	"info": {
+		"name": "Curso Online - Módulo 6 (Reportes)",
+		"description": "Colección final del proyecto para probar la exportación síncrona de reportes en Excel (Apache POI) y PDF (OpenPDF).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "PEGA_TU_TOKEN_ADMIN_O_PROFE_AQUI",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "1. Reportes de Progreso (Profesor / Admin)",
+			"item": [
+				{
+					"name": "1. Reporte Grupal de Sección (Excel)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/reportes/seccion/1/grupal/excel", "host": ["{{baseUrl}}"], "path": ["reportes", "seccion", "1", "grupal", "excel"]}
+					}
+				},
+				{
+					"name": "2. Reporte Grupal de Sección (PDF)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/reportes/seccion/1/grupal/pdf", "host": ["{{baseUrl}}"], "path": ["reportes", "seccion", "1", "grupal", "pdf"]}
+					}
+				},
+				{
+					"name": "3. Reporte Individual Alumno (Excel)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/reportes/alumno/10/curso/1/individual/excel", "host": ["{{baseUrl}}"], "path": ["reportes", "alumno", "10", "curso", "1", "individual", "excel"]}
+					}
+				},
+				{
+					"name": "4. Reporte Individual Alumno (PDF)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/reportes/alumno/10/curso/1/individual/pdf", "host": ["{{baseUrl}}"], "path": ["reportes", "alumno", "10", "curso", "1", "individual", "pdf"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Auditoría (Solo Admin)",
+			"item": [
+				{
+					"name": "5. Historial de Accesos (Últimos 30 días)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/reportes/accesos/excel", "host": ["{{baseUrl}}"], "path": ["reportes", "accesos", "excel"]}
+					}
+				},
+				{
+					"name": "6. Historial de Accesos (Por rango de fechas)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reportes/accesos/excel?fechaDesde=2026-01-01T00:00:00&fechaHasta=2026-05-30T23:59:59",
+							"host": ["{{baseUrl}}"],
+							"path": ["reportes", "accesos", "excel"],
+							"query": [
+								{"key": "fechaDesde", "value": "2026-01-01T00:00:00"},
+								{"key": "fechaHasta", "value": "2026-05-30T23:59:59"}
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

@@ -3,6 +3,8 @@ package com.cursoonline.service.academico;
 import com.cursoonline.dto.academico.request.AsignarProfesorRequest;
 import com.cursoonline.dto.academico.request.SeccionRequest;
 import com.cursoonline.dto.academico.response.InscripcionAlumnoResponse;
+import com.cursoonline.dto.academico.response.ProfesorSeccionResponse;
+import com.cursoonline.dto.academico.response.ResumenAnioEscolarResponse;
 import com.cursoonline.dto.academico.response.SeccionResponse;
 import com.cursoonline.entity.academico.CatAnioEscolar;
 import com.cursoonline.entity.academico.CatCurso;
@@ -23,10 +25,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import com.cursoonline.dto.academico.request.InscribirAlumnoRequest;
-import com.cursoonline.exception.academico.AlumnoYaInscritoException;
-import com.cursoonline.exception.academico.InscripcionNoEncontradaException;
-import com.cursoonline.exception.academico.UsuarioNoEsAlumnoException;
-import com.cursoonline.repository.academico.RelAlumnoSeccionRepository;
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -109,6 +107,53 @@ public class SeccionService {
         log.info("Sección actualizada → {}", seccion.getDesNombre());
         return toResponse(seccion);
     }
+        public ResumenAnioEscolarResponse obtenerResumenAnio(Integer idAnio) {
+        CatAnioEscolar anio = anioEscolarRepository.findById(idAnio)
+                .orElseThrow(() -> new AnioEscolarNoEncontradoException(idAnio));
+
+        return new ResumenAnioEscolarResponse(
+                anio.getIdAnioEscolar(),
+                anio.getValAnio(),
+                anio.getDesDescripcion(),
+                anio.getFecInicio(),
+                anio.getFecFin(),
+                anio.getEstActivo(),
+                seccionRepository.countSeccionesPorAnio(idAnio),
+                seccionRepository.countCursosPorAnio(idAnio),
+                seccionRepository.countAlumnosPorAnio(idAnio),
+                seccionRepository.countProfesoresPorAnio(idAnio)
+        );
+        }
+
+        // ── Secciones sin profesor (#7) ──
+        public List<SeccionResponse> listarSeccionesSinProfesor() {
+        return seccionRepository.findSeccionesSinProfesor()
+                .stream()
+                .map(this::toResponse)   // reusa mapper existente
+                .toList();
+        }
+
+        // ── Asignaciones profesor-sección con filtros (#8) ──
+        public List<ProfesorSeccionResponse> listarAsignacionesConFiltros(
+                Integer idProfesor, Integer idSeccion, Integer idCurso, Integer idAnio) {
+        return profesorSeccionRepository
+                .findAsignacionesConFiltros(idProfesor, idSeccion, idCurso, idAnio)
+                .stream()
+                .map(rps -> new ProfesorSeccionResponse(
+                        rps.getIdProfesorSeccion(),
+                        rps.getProfesor().getIdUsuario(),
+                        rps.getProfesor().getDesNombres(),
+                        rps.getProfesor().getDesApellidos(),
+                        rps.getProfesor().getDesCorreo(),
+                        rps.getSeccion().getIdSeccion(),
+                        rps.getSeccion().getDesNombre(),
+                        rps.getSeccion().getCurso().getIdCurso(),
+                        rps.getSeccion().getCurso().getDesNombre(),
+                        rps.getSeccion().getAnioEscolar().getIdAnioEscolar(),
+                        rps.getSeccion().getAnioEscolar().getValAnio(),
+                        rps.getFecAsignacion()))
+                .toList();
+        }
 
     // ── CUS-09: ASIGNAR PROFESOR ──────────────────────────────────────────────
 

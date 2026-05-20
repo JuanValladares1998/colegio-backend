@@ -1,0 +1,251 @@
+{
+	"info": {
+		"name": "Cursos Online - Endpoints Adicionales",
+		"description": "Endpoints agregados sobre los módulos base. Requieren JWT en `Authorization: Bearer {{token}}`. Configura las variables `adminToken` y `alumnoToken` con tokens válidos antes de probar.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{ "key": "token", "value": "{{adminToken}}", "type": "string" }
+		]
+	},
+	"variable": [
+		{ "key": "baseUrl",     "value": "http://localhost:8080", "type": "string" },
+		{ "key": "adminToken",  "value": "PEGA_AQUI_TOKEN_ADMIN", "type": "string" },
+		{ "key": "alumnoToken", "value": "PEGA_AQUI_TOKEN_ALUMNO", "type": "string" },
+		{ "key": "idUsuario",   "value": "2",  "type": "string" },
+		{ "key": "idAnio",      "value": "1",  "type": "string" },
+		{ "key": "idProfesor",  "value": "3",  "type": "string" },
+		{ "key": "idCurso",     "value": "1",  "type": "string" }
+	],
+	"item": [
+		{
+			"name": "Usuarios",
+			"item": [
+				{
+					"name": "GET /usuarios — Listar todos (admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios?page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" },
+								{ "key": "sort", "value": "desApellidos,asc", "disabled": true },
+								{ "key": "rol", "value": "ROL_ALUMNO", "disabled": true },
+								{ "key": "busqueda", "value": "juan", "disabled": true },
+								{ "key": "estActivo", "value": "true", "disabled": true },
+								{ "key": "sinSeccion", "value": "false", "disabled": true }
+							]
+						},
+						"description": "Listado paginado de usuarios. Todos los filtros son opcionales — activa los disabled para combinarlos."
+					}
+				},
+				{
+					"name": "GET /usuarios — Por rol (profesores)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios?rol=ROL_PROFESOR&page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios"],
+							"query": [
+								{ "key": "rol", "value": "ROL_PROFESOR" },
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" }
+							]
+						},
+						"description": "Solo profesores. Cambiar `rol` a `ROL_ALUMNO` o `ROL_ADMIN` según se necesite."
+					}
+				},
+				{
+					"name": "GET /usuarios — Alumnos SIN sección",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios?rol=ROL_ALUMNO&sinSeccion=true&page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios"],
+							"query": [
+								{ "key": "rol", "value": "ROL_ALUMNO" },
+								{ "key": "sinSeccion", "value": "true" },
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" }
+							]
+						},
+						"description": "Alumnos sin inscripción activa en ninguna sección. `sinSeccion=true` solo aplica para `ROL_ALUMNO`."
+					}
+				},
+				{
+					"name": "GET /usuarios — Búsqueda + activos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios?busqueda=juan&estActivo=true&page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios"],
+							"query": [
+								{ "key": "busqueda", "value": "juan" },
+								{ "key": "estActivo", "value": "true" },
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" }
+							]
+						},
+						"description": "Búsqueda case-insensitive en nombres, apellidos o correo, filtrando solo activos."
+					}
+				},
+				{
+					"name": "GET /usuarios/me — Mi info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios", "me"]
+						},
+						"description": "Devuelve la info del usuario logueado (cualquier rol). Útil para que el front sepa quién está conectado al arrancar la sesión."
+					}
+				},
+				{
+					"name": "PUT /usuarios/{id}/datos — Actualizar nombre y correo",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/{{idUsuario}}/datos",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios", "{{idUsuario}}", "datos"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"desNombres\": \"Juan Carlos\",\n  \"desApellidos\": \"Pérez García\",\n  \"desCorreo\": \"juan.perez@colegio.edu\"\n}"
+						},
+						"description": "Solo admin. Valida unicidad de correo. Devuelve 409 si el correo ya está en otro usuario."
+					}
+				},
+				{
+					"name": "PUT /usuarios/{id}/contrasena — Setear contraseña (admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/{{idUsuario}}/contrasena",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios", "{{idUsuario}}", "contrasena"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pwdNueva\": \"NuevaPass123\"\n}"
+						},
+						"description": "Admin asigna una contraseña específica a un usuario. Queda marcada como temporal (`est_pwd_temporal = true`), forzando cambio en el próximo login. Diferente de `/auth/recuperar-credenciales/{id}` (que genera una aleatoria)."
+					}
+				}
+			]
+		},
+		{
+			"name": "Año Escolar",
+			"item": [
+				{
+					"name": "GET /anios-escolares/{id}/resumen",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/anios-escolares/{{idAnio}}/resumen",
+							"host": ["{{baseUrl}}"],
+							"path": ["anios-escolares", "{{idAnio}}", "resumen"]
+						},
+						"description": "Devuelve los contadores agregados del año: total de secciones, cursos, alumnos inscritos y profesores asignados. Disponible para admin y profesor."
+					}
+				}
+			]
+		},
+		{
+			"name": "Secciones",
+			"item": [
+				{
+					"name": "GET /secciones/sin-profesor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/secciones/sin-profesor",
+							"host": ["{{baseUrl}}"],
+							"path": ["secciones", "sin-profesor"]
+						},
+						"description": "Solo admin. Secciones activas que no tienen ningún profesor asignado activo. Útil para alertar al admin sobre secciones desatendidas."
+					}
+				}
+			]
+		},
+		{
+			"name": "Asignaciones Profesor-Sección",
+			"item": [
+				{
+					"name": "GET /profesor-seccion — Todas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/profesor-seccion",
+							"host": ["{{baseUrl}}"],
+							"path": ["profesor-seccion"],
+							"query": [
+								{ "key": "idProfesor", "value": "3", "disabled": true },
+								{ "key": "idSeccion",  "value": "5", "disabled": true },
+								{ "key": "idCurso",    "value": "1", "disabled": true },
+								{ "key": "idAnio",     "value": "1", "disabled": true }
+							]
+						},
+						"description": "Listado completo de asignaciones activas. Activa los filtros disabled para combinar."
+					}
+				},
+				{
+					"name": "GET /profesor-seccion — Por profesor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/profesor-seccion?idProfesor={{idProfesor}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["profesor-seccion"],
+							"query": [
+								{ "key": "idProfesor", "value": "{{idProfesor}}" }
+							]
+						},
+						"description": "Todas las secciones asignadas a un profesor."
+					}
+				},
+				{
+					"name": "GET /profesor-seccion — Por curso y año",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/profesor-seccion?idCurso={{idCurso}}&idAnio={{idAnio}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["profesor-seccion"],
+							"query": [
+								{ "key": "idCurso", "value": "{{idCurso}}" },
+								{ "key": "idAnio",  "value": "{{idAnio}}" }
+							]
+						},
+						"description": "Asignaciones de un curso específico en un año escolar."
+					}
+				}
+			]
+		}
+	]
+}

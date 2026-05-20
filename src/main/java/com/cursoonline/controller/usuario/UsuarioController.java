@@ -1,26 +1,32 @@
 package com.cursoonline.controller.usuario;
 
 import com.cursoonline.dto.common.ApiResponse;
+import com.cursoonline.dto.usuario.request.ActualizarDatosUsuarioRequest;
 import com.cursoonline.dto.usuario.request.ActualizarEstadoRequest;
 import com.cursoonline.dto.usuario.request.ActualizarRolRequest;
+import com.cursoonline.dto.usuario.request.CambiarContrasenaAdminRequest;
 import com.cursoonline.dto.usuario.request.CrearUsuarioRequest;
 import com.cursoonline.dto.usuario.response.CargaMasivaResponse;
 import com.cursoonline.dto.usuario.response.CrearUsuarioResponse;
 import com.cursoonline.dto.usuario.response.UsuarioResponse;
+import com.cursoonline.entity.auth.SegUsuario;
 import com.cursoonline.service.usuario.UsuarioService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -179,5 +185,48 @@ public class UsuarioController {
                 "Archivo procesado. %d registrados con éxito. %d errores encontrados.",
                 reporte.exitosos(), reporte.fallidos());
         return ResponseEntity.ok(ApiResponse.ok(mensaje, reporte));
+    }
+    @GetMapping
+@PreAuthorize("hasAuthority('ROL_ADMIN')")
+@Operation(summary = "Listado de usuarios con filtros")
+public ResponseEntity<ApiResponse<Page<UsuarioResponse>>> listar(
+        @RequestParam(required = false) String rol,
+        @RequestParam(required = false) String busqueda,
+        @RequestParam(required = false) Boolean estActivo,
+        @RequestParam(defaultValue = "false") boolean sinSeccion,
+        @ParameterObject Pageable pageable,
+        @AuthenticationPrincipal SegUsuario admin) {
+    return ResponseEntity.ok(ApiResponse.ok(
+            "Usuarios obtenidos.",
+            usuarioService.listarConFiltros(rol, busqueda, estActivo, sinSeccion, pageable)));
+}
+
+// #2 — actualizar nombre/correo
+    @PutMapping("/{id}/datos")
+    @PreAuthorize("hasAuthority('ROL_ADMIN')")
+    public ResponseEntity<ApiResponse<UsuarioResponse>> actualizarDatos(
+            @PathVariable Integer id,
+            @Valid @RequestBody ActualizarDatosUsuarioRequest req) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Datos actualizados.", usuarioService.actualizarDatos(id, req)));
+    }
+
+    // #3 — admin cambia contraseña de otro usuario
+    @PutMapping("/{id}/contrasena")
+    @PreAuthorize("hasAuthority('ROL_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> cambiarContrasena(
+            @PathVariable Integer id,
+            @Valid @RequestBody CambiarContrasenaAdminRequest req) {
+        usuarioService.cambiarContrasenaAdmin(id, req);
+        return ResponseEntity.ok(ApiResponse.ok("Contraseña actualizada."));
+    }
+
+    // #9 — mi propia info (cualquier autenticado)
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<UsuarioResponse>> miInfo(
+            @AuthenticationPrincipal SegUsuario usuario) {
+        // SegUsuario YA viene cargado por el filtro JWT — no hace falta consultar la BD.
+        return ResponseEntity.ok(ApiResponse.ok("Mi información.", usuarioService.obtenerUsuario(usuario.getIdUsuario())));
     }
 }

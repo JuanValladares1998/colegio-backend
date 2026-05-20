@@ -1,7 +1,7 @@
 {
 	"info": {
-		"name": "Curso Online - Módulo 5 (Evaluaciones y Preguntas)",
-		"description": "Colección completa para el Módulo 5, que incluye la gestión de Evaluaciones (CUS-13) y su banco de Preguntas con opciones.",
+		"name": "Curso Online - Módulo 5 (Evaluaciones, Preguntas e Intentos)",
+		"description": "Colección completa para el Módulo 5, que incluye la gestión de Evaluaciones (CUS-13), banco de Preguntas y Rendición de exámenes.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -175,6 +175,77 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {"raw": "{{baseUrl}}/preguntas/1", "host": ["{{baseUrl}}"], "path": ["preguntas", "1"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Intentos (Alumnos)",
+			"item": [
+				{
+					"name": "1. Iniciar o Reanudar Intento",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/intentos/evaluacion/1/iniciar", "host": ["{{baseUrl}}"], "path": ["intentos", "evaluacion", "1", "iniciar"]}
+					}
+				},
+				{
+					"name": "2. Obtener Intento en Curso",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/intentos/1", "host": ["{{baseUrl}}"], "path": ["intentos", "1"]}
+					}
+				},
+				{
+					"name": "3. Guardar Respuesta (Opción Múltiple)",
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idOpcionElegida\": 1,\n  \"desRespuestaTexto\": null\n}",
+							"options": {"raw": {"language": "json"}}
+						},
+						"url": {"raw": "{{baseUrl}}/intentos/1/pregunta/1", "host": ["{{baseUrl}}"], "path": ["intentos", "1", "pregunta", "1"]}
+					}
+				},
+				{
+					"name": "4. Guardar Respuesta (Completar Código)",
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idOpcionElegida\": null,\n  \"desRespuestaTexto\": \"println\"\n}",
+							"options": {"raw": {"language": "json"}}
+						},
+						"url": {"raw": "{{baseUrl}}/intentos/1/pregunta/2", "host": ["{{baseUrl}}"], "path": ["intentos", "1", "pregunta", "2"]}
+					}
+				},
+				{
+					"name": "5. Finalizar Intento",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/intentos/1/finalizar", "host": ["{{baseUrl}}"], "path": ["intentos", "1", "finalizar"]}
+					}
+				},
+				{
+					"name": "6. Obtener Revisión (Post-Finalizado)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/intentos/1/revision", "host": ["{{baseUrl}}"], "path": ["intentos", "1", "revision"]}
+					}
+				},
+				{
+					"name": "7. Historial de Intentos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {"raw": "{{baseUrl}}/intentos/evaluacion/1/historial", "host": ["{{baseUrl}}"], "path": ["intentos", "evaluacion", "1", "historial"]}
 					}
 				}
 			]

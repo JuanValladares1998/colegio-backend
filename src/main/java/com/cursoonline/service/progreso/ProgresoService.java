@@ -16,6 +16,7 @@ import com.cursoonline.entity.academico.TraSeccion;
 import com.cursoonline.entity.auth.SegUsuario;
 import com.cursoonline.entity.progreso.TraProgresoLeccion;
 import com.cursoonline.exception.academico.AccesoCursoDenegadoException;
+import com.cursoonline.exception.academico.AlumnoNoMatriculadoException;
 import com.cursoonline.exception.academico.CursoNoEncontradoException;
 import com.cursoonline.exception.academico.LeccionNoEncontradaException;
 import com.cursoonline.exception.academico.SeccionNoEncontradaException;
@@ -147,11 +148,21 @@ private final CatCursoRepository    cursoRepository;
     );
         }
 
-        private void validarAccesoProfesorACurso(SegUsuario profesor, Integer idCurso) {
-        boolean tiene = profesorSeccionRepository
-                .profesorTieneAccesoACurso(profesor.getIdUsuario(), idCurso);
-        if (!tiene) throw new AccesoCursoDenegadoException();
-        }
+private void validarAccesoProfesorACurso(SegUsuario usuario, Integer idCurso) {
+    // 1. Verificación segura: Si es Admin, se salta la validación de inmediato
+    if (usuario.getRol() != null && "ROL_ADMIN".equals(usuario.getRol().getCodRol())) {
+        return;
+    }
+    
+    // 2. Si no es Admin, verificamos si el profesor está asignado a la sección del curso
+    boolean tiene = profesorSeccionRepository
+            .profesorTieneAccesoACurso(usuario.getIdUsuario(), idCurso);
+            
+    // 🛡️ ALERTA 1 (Seguridad): Si no enseña el curso, acceso denegado de verdad
+    if (!tiene) {
+        throw new AccesoCursoDenegadoException();
+    }
+}
 
         private FilaTableroResponse toFilaResponse(FilaTableroView v) {
         long total = safeLong(v.getTotalObligatorias());
@@ -204,13 +215,13 @@ private final CatCursoRepository    cursoRepository;
                 List.of()  // calificaciones — placeholder M5
         );
     }
-    public DetalleProgresoAlumnoResponse obtenerProgresoAlumno(
+ public DetalleProgresoAlumnoResponse obtenerProgresoAlumno(
         Integer idAlumno, Integer idCurso, SegUsuario profesor) {
 
-    // 1. El profesor debe tener acceso al curso
+    // 1. ALERTA 1: El profesor o administrador debe tener acceso al curso
     validarAccesoProfesorACurso(profesor, idCurso);
 
-    // 2. El alumno debe existir y estar inscrito en alguna sección de ese curso
+    // 2. El alumno debe existir
     SegUsuario alumno = usuarioRepository.findById(idAlumno)
             .orElseThrow(() -> new UsuarioNoEncontradoException(idAlumno));
 
@@ -218,18 +229,23 @@ private final CatCursoRepository    cursoRepository;
         throw new UsuarioNoEsAlumnoException(idAlumno);
     }
 
+    // 3. ALERTA 2: Verificamos si el alumno realmente pertenece a ese curso
     boolean inscrito = alumnoSeccionRepository
             .alumnoTieneAccesoACurso(idAlumno, idCurso);
-    if (!inscrito) throw new AccesoCursoDenegadoException();
+            
+    // 🔍 Si el alumno no está matriculado en este curso, lanzamos tu nueva alerta
+    if (!inscrito) {
+        throw new AlumnoNoMatriculadoException();
+    }
 
     CatCurso curso = cursoRepository.findById(idCurso)
             .orElseThrow(() -> new CursoNoEncontradoException(idCurso));
 
-    // 3. Historial completo de lecciones
+    // 4. Historial completo de lecciones
     List<HistorialLeccionView> historial = progresoRepository
             .findHistorialPorAlumnoYCurso(idAlumno, idCurso);
 
-    // 4. Agrupar por módulo (LinkedHashMap para conservar el orden de la query)
+    // 5. Agrupar por módulo (LinkedHashMap para conservar el orden de la query)
     Map<Integer, List<HistorialLeccionView>> porModulo = historial.stream()
             .collect(Collectors.groupingBy(
                     HistorialLeccionView::getIdModulo,
@@ -240,7 +256,7 @@ private final CatCursoRepository    cursoRepository;
             .map(this::toModuloDetalle)
             .toList();
 
-    // 5. Totales (solo obligatorias para el porcentaje)
+    // 6. Totales (solo obligatorias para el porcentaje)
     long total = historial.stream()
             .filter(v -> Boolean.TRUE.equals(v.getObligatoria()))
             .count();
@@ -270,6 +286,7 @@ private final CatCursoRepository    cursoRepository;
             List.of()  // placeholder M5
     );
 }
+
 
 private ModuloDetalleResponse toModuloDetalle(List<HistorialLeccionView> filas) {
     HistorialLeccionView primera = filas.get(0);

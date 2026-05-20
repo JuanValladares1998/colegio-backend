@@ -12,7 +12,8 @@
 - [2. Gestión de Estados (Activar / Desactivar)](#2-gestion-de-estados-activar-desactivar)
 - [3. Banco de Preguntas y Opciones (Profesor / Admin)](#3-banco-de-preguntas-y-opciones-profesor-admin)
 - [4. Catálogos y Tipos de Pregunta](#4-catalogos-y-tipos-de-pregunta)
-- [5. Errores y Casos de Prueba](#5-errores-y-casos-de-prueba)
+- [5. Rendición de Evaluación (Alumno)](#5-rendicion-de-evaluacion-alumno)
+- [6. Errores y Casos de Prueba](#6-errores-y-casos-de-prueba)
 
 ---
 
@@ -196,7 +197,51 @@ Esta validación se aplica dinámicamente en el backend al crear/editar.
 | `VERDADERO_FALSO` | Exactamente 2 opciones enviadas, exactamente 1 debe ser `estCorrecta = true`. |
 | `COMPLETAR_CODIGO` | Exactamente 1 opción enviada, la cual contiene la respuesta exacta (`estCorrecta = true`). |
 
-## 5. Errores y Casos de Prueba
+## 5. Rendición de Evaluación (Alumno) — `/intentos`
+
+Este submódulo es exclusivo para usuarios con `ROL_ALUMNO`. Gestiona el ciclo de vida de una rendición de examen, controlando tiempo, respuestas e idempotencia.
+
+### `POST /intentos/evaluacion/{idEvaluacion}/iniciar`
+**Acceso:** 🔒 `ROL_ALUMNO`
+
+[cite_start]Inicia o reanuda un intento[cite: 288, 376]. **Precondiciones estrictas:**
+1. [cite_start]La evaluación debe estar activa (`estActiva = true`)[cite: 289].
+2. [cite_start]El alumno debe estar inscrito en el curso[cite: 291].
+3. [cite_start]El alumno **debe haber completado el 100% de las lecciones obligatorias** publicadas del módulo (`countLeccionesObligatoriasPendientes` == 0)[cite: 247, 248, 292].
+4. [cite_start]No haber excedido la cantidad de `valMaxIntentos` permitidos[cite: 239, 299].
+
+> [cite_start]💡 **Reanudación:** Si el alumno ya tiene un intento en curso (`estCompletado = false`), el endpoint devuelve ese mismo intento en lugar de crear uno nuevo, siempre y cuando no haya expirado por límite de tiempo[cite: 295, 297].
+
+### `GET /intentos/{idIntento}`
+**Acceso:** 🔒 `ROL_ALUMNO`
+
+[cite_start]Obtiene el estado actual del examen, incluyendo los `minutosRestantes` calculados dinámicamente y la lista de respuestas ya guardadas para poder retomar la evaluación donde se dejó[cite: 303, 347, 348].
+
+### `PUT /intentos/{idIntento}/pregunta/{idPregunta}`
+**Acceso:** 🔒 `ROL_ALUMNO`
+
+[cite_start]Guarda o actualiza la respuesta a una pregunta específica[cite: 306, 378]. 
+* [cite_start]Para `OPCION_MULTIPLE` o `VERDADERO_FALSO`: Se debe enviar `idOpcionElegida` y dejar el texto nulo[cite: 312, 313].
+* [cite_start]Para `COMPLETAR_CODIGO`: Se debe enviar `desRespuestaTexto` y dejar el ID de opción en nulo[cite: 311].
+
+### `POST /intentos/{idIntento}/finalizar`
+**Acceso:** 🔒 `ROL_ALUMNO`
+
+[cite_start]Cierra el intento de forma inmutable[cite: 318, 379]. [cite_start]El backend evalúa las respuestas contra las opciones correctas [cite: 334, 335][cite_start], calcula el puntaje total sobre 100 y determina si el alumno aprobó según el `valPuntajeMinimo` establecido en la evaluación[cite: 336, 338].
+
+### `GET /intentos/{idIntento}/revision`
+**Acceso:** 🔒 `ROL_ALUMNO`
+
+[cite_start]Solo accesible si el intento está finalizado (`estCompletado = true`)[cite: 323, 381]. [cite_start]Devuelve el detalle de las preguntas, marcando claramente las opciones correctas y la elección del alumno para revisión del aprendizaje[cite: 360, 363].
+
+### `GET /intentos/evaluacion/{idEvaluacion}/historial`
+**Acceso:** 🔒 `ROL_ALUMNO`
+
+[cite_start]Devuelve el listado de todos los intentos realizados por el alumno para una evaluación particular, ordenados del más reciente al más antiguo[cite: 320, 380].
+
+---
+
+## 6. Errores y Casos de Prueba
 
 Todos los errores mantienen el estándar de la API: devuelven `exito: false`, `datos: null` y un `mensaje` descriptivo capturado por el `GlobalExceptionHandler`.
 
@@ -212,6 +257,12 @@ Todos los errores mantienen el estándar de la API: devuelven `exito: false`, `d
 | `POST/PUT /preguntas` | `400` | `PreguntaInvalidaException` | `"Una pregunta verdadero/falso debe tener exactamente 1 opción correcta."` (Depende de la regla del tipo) [cite: 5, 59-64] |
 | `GET / PUT / DELETE` (Preguntas)| `404` | `PreguntaNoEncontradaException` | `"Pregunta con ID X no encontrada."` [cite: 1, 4] |
 | `POST/PUT /preguntas` | `404` | `TipoPreguntaNoEncontradoException`| `"Tipo de pregunta con ID X no encontrado."` [cite: 2, 4, 46] |
+| `POST .../iniciar` | `403` | `LeccionesPendientesException` | [cite_start]`"Debes completar las X lecciones obligatorias del módulo antes de rendir la evaluación."` [cite: 238, 243] |
+| `POST .../iniciar` | `403` | `EvaluacionNoActivaException` | [cite_start]`"La evaluación no está activa para los alumnos."` [cite: 237, 243] |
+| `POST .../iniciar` | `409` | `MaxIntentosAlcanzadosException` | [cite_start]`"Has alcanzado el número máximo de intentos permitidos (X)."` [cite: 239, 244] |
+| `PUT/POST ...` | `409` | `IntentoCompletadoException` | [cite_start]`"El intento ya está finalizado y no admite cambios."` [cite: 236, 242] |
+| `PUT .../pregunta` | `400` | `RespuestaInvalidaException` | [cite_start]`"La pregunta no pertenece a la evaluación del intento"`, `"Para esta pregunta debes enviar..."`, etc. [cite: 240, 244] |
+| `GET .../revision` | `400` | `RespuestaInvalidaException` | [cite_start]`"El intento aún no está finalizado. Finalízalo primero para ver la revisión."` [cite: 323] |
 
 ### 🧪 Matriz de Pruebas (QA - Postman)
 | Acción | Rol | Condición | Código HTTP | Resultado Esperado |
@@ -228,3 +279,8 @@ Todos los errores mantienen el estándar de la API: devuelven `exito: false`, `d
 | **POST** crear pregunta | Profesor | Tipo `VERDADERO_FALSO` enviando 2 opciones correctas | `400 Bad Request` | Bloqueado por `PreguntaInvalidaException` . |
 | **PUT** actualizar preg | Profesor | Enviar nuevas opciones con Eval Inactiva | `200 OK` | [cite_start]Borra opciones previas de BD y guarda las nuevas enviadas [cite: 53-54]. |
 | **DELETE** eliminar preg| Profesor | ID válido y Eval Inactiva | `200 OK` | [cite_start]Queda con `estActiva: false` (eliminación lógica) [cite: 57, 81-82]. |
+| **POST** iniciar | Alumno | Lecciones obligatorias sin completar | `403 Forbidden` | [cite_start]Bloqueado por `countLeccionesObligatoriasPendientes`[cite: 247, 248, 292]. |
+| **POST** iniciar | Alumno | Intento activo existente (`estCompletado: false`) | `200 OK` | [cite_start]Reanuda la sesión; devuelve `IntentoEnCursoResponse` con tiempo restante[cite: 295, 297, 347, 348]. |
+| **PUT** guardar resp. | Alumno | Intento superó `valTiempoLimite` en BD | `409 Conflict` | [cite_start]Auto-cierre detectado por `cerrarSiExpirado()`, rechaza guardado[cite: 328, 330]. |
+| **POST** finalizar | Alumno | Intento válido | `200 OK` | [cite_start]Devuelve `valCalificacion` (0-100) y `estAprobado`[cite: 336, 337, 338]. |
+| **GET** revisión | Alumno | Intento no finalizado | `400 Bad Request` | [cite_start]Rechazado hasta que finalice (`IntentoCompletadoException`)[cite: 323]. |

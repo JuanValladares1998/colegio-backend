@@ -3,6 +3,8 @@ package com.cursoonline.controller.academico;
 import com.cursoonline.dto.academico.request.AsignarProfesorRequest;
 import com.cursoonline.dto.academico.request.SeccionRequest;
 import com.cursoonline.dto.academico.response.InscripcionAlumnoResponse;
+import com.cursoonline.dto.academico.response.ProfesorSeccionResponse;
+import com.cursoonline.dto.academico.response.ResumenAnioEscolarResponse;
 import com.cursoonline.dto.academico.response.SeccionResponse;
 import com.cursoonline.dto.common.ApiResponse;
 import com.cursoonline.service.academico.SeccionService;
@@ -145,5 +147,34 @@ public class SeccionController {
                 @PathVariable Integer idUsuario) {
         seccionService.darDeBajaAlumno(idSeccion, idUsuario);
         return ResponseEntity.ok(ApiResponse.ok("Alumno dado de baja correctamente."));
+        }
+
+        @GetMapping("/anios-escolares/{idAnio}/resumen")
+        @PreAuthorize("hasAnyAuthority('ROL_ADMIN','ROL_PROFESOR')")
+        public ResponseEntity<ApiResponse<ResumenAnioEscolarResponse>> resumenAnio(
+                @PathVariable Integer idAnio) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Resumen obtenido.", seccionService.obtenerResumenAnio(idAnio)));
+        }
+
+        // #7 — secciones sin profesor
+        @GetMapping("/secciones/sin-profesor")
+        @PreAuthorize("hasAuthority('ROL_ADMIN')")
+        public ResponseEntity<ApiResponse<List<SeccionResponse>>> seccionesSinProfesor() {
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Secciones sin profesor obtenidas.", seccionService.listarSeccionesSinProfesor()));
+        }
+
+        // #8 — asignaciones profesor-sección con filtros
+        @GetMapping("/profesor-seccion")
+        @PreAuthorize("hasAnyAuthority('ROL_ADMIN','ROL_PROFESOR')")
+        public ResponseEntity<ApiResponse<List<ProfesorSeccionResponse>>> asignaciones(
+                @RequestParam(required = false) Integer idProfesor,
+                @RequestParam(required = false) Integer idSeccion,
+                @RequestParam(required = false) Integer idCurso,
+                @RequestParam(required = false) Integer idAnio) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Asignaciones obtenidas.",
+                seccionService.listarAsignacionesConFiltros(idProfesor, idSeccion, idCurso, idAnio)));
         }
 }

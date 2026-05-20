@@ -13,6 +13,8 @@ import com.cursoonline.dto.common.ApiResponse;
 import com.cursoonline.exception.academico.*;
 import com.cursoonline.exception.auth.*;
 import com.cursoonline.exception.evaluacion.*;
+import com.cursoonline.exception.reporte.ErrorGenerandoReporteException;
+import com.cursoonline.exception.reporte.SinDatosParaReporteException;
 import com.cursoonline.exception.usuario.CorreoDuplicadoException;
 import com.cursoonline.exception.usuario.RolNoEncontradoException;
 import com.cursoonline.exception.usuario.UsuarioNoEncontradoException;
@@ -224,6 +226,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IntentoNoEncontradoException.class)
     public ResponseEntity<ApiResponse<Void>> handleIntentoNotFound(IntentoNoEncontradoException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AlumnoNoMatriculadoException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAlumnoNoMatriculado(AlumnoNoMatriculadoException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
+    }
+    @ExceptionHandler(SinDatosParaReporteException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSinDatos(SinDatosParaReporteException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ErrorGenerandoReporteException.class)
+    public ResponseEntity<ApiResponse<Void>> handleErrorReporte(ErrorGenerandoReporteException ex) {
+        log.error("Error generando reporte: ", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(IntentoCompletadoException.class)

@@ -1,7 +1,9 @@
 package com.cursoonline.service.usuario;
 
+import com.cursoonline.dto.usuario.request.ActualizarDatosUsuarioRequest;
 import com.cursoonline.dto.usuario.request.ActualizarEstadoRequest;
 import com.cursoonline.dto.usuario.request.ActualizarRolRequest;
+import com.cursoonline.dto.usuario.request.CambiarContrasenaAdminRequest;
 import com.cursoonline.dto.usuario.request.CrearUsuarioRequest;
 import com.cursoonline.dto.usuario.response.CargaMasivaResponse;
 import com.cursoonline.dto.usuario.response.UsuarioResponse;
@@ -10,6 +12,7 @@ import com.cursoonline.dto.usuario.response.CargaMasivaResponse.ErrorFila;
 import com.cursoonline.entity.auth.CatRol;
 import com.cursoonline.entity.auth.SegUsuario;
 import com.cursoonline.entity.usuario.AudLogAdmin;
+import com.cursoonline.exception.usuario.CorreoDuplicadoException;
 import com.cursoonline.exception.usuario.RolNoEncontradoException;
 import com.cursoonline.exception.usuario.UsuarioNoEncontradoException;
 import com.cursoonline.dto.usuario.response.CrearUsuarioResponse;
@@ -391,7 +394,48 @@ public class UsuarioService {
         new SecureRandom().nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
+        
 
+    // ── Listado filtrado (#1, #5, #6) ──
+    public Page<UsuarioResponse> listarConFiltros(
+            String codRol, String busqueda, Boolean estActivo,
+            boolean sinSeccion, Pageable pageable) {
+        return usuarioRepository
+                .buscarConFiltros(codRol, busqueda, estActivo, sinSeccion, pageable)
+                .map(this::toResponse);
+    }
+
+    // ── Actualizar nombre/correo (#2) ──
+    @Transactional
+    public UsuarioResponse actualizarDatos(Integer idUsuario, ActualizarDatosUsuarioRequest req) {
+        SegUsuario u = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new UsuarioNoEncontradoException(idUsuario));
+
+        if (usuarioRepository.existsByDesCorreoAndIdUsuarioNot(req.desCorreo(), idUsuario)) {
+            throw new CorreoDuplicadoException(req.desCorreo());
+        }
+
+        u.setDesNombres(req.desNombres());
+        u.setDesApellidos(req.desApellidos());
+        u.setDesCorreo(req.desCorreo());
+        usuarioRepository.save(u);
+
+        log.info("Datos de usuario actualizados → ID {}, correo: {}", idUsuario, u.getDesCorreo());
+        return toResponse(u);
+    }
+
+    // ── Cambiar contraseña por admin (#3) ──
+    @Transactional
+    public void cambiarContrasenaAdmin(Integer idUsuario, CambiarContrasenaAdminRequest req) {
+        SegUsuario u = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new UsuarioNoEncontradoException(idUsuario));
+
+        u.setPwdContrasena(passwordEncoder.encode(req.pwdNueva()));
+        u.setEstPwdTemporal(true);   // forzar cambio en próximo login
+        usuarioRepository.save(u);
+
+        log.info("Contraseña cambiada por admin → usuario {}", u.getDesCorreo());
+    }
     private void registrarLogAdmin(SegUsuario admin, SegUsuario afectado,
                                     String accion, String detalle) {
         logAdminRepository.save(AudLogAdmin.builder()
